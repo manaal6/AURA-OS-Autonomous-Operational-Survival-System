@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-
+import React, { useState, useEffect, useRef, useCallback } from "react";
 // ═══════════════════════════════════════════════════════
 // AURA OS — UPGRADED FOR GOOGLE ANTIGRAVITY HACKATHON
 // Modifications:
