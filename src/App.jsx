@@ -781,7 +781,16 @@ export default function AuraOS() {
       {/* ── B) STATE TICKER — contrast fixed ── */}
       <StateTicker state={sysState}/>
 
-      <div style={{display:"grid",gridTemplateColumns:"210px 1fr 270px",height:"calc(100vh - 94px)",overflow:"hidden"}}>
+      <div style={{
+    display: "grid",
+    gridTemplateColumns:
+      window.innerWidth < 768
+        ? "1fr"
+        : "210px 1fr 270px",
+    height: "calc(100vh - 94px)",
+    overflow: "hidden",
+  }}
+>
 
         {/* ── LEFT ── */}
         <div style={{background:"#070707",borderRight:"1px solid #0f0f0f",padding:11,overflowY:"auto",display:"flex",flexDirection:"column"}}>
