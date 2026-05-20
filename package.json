@@ -1,0 +1,49 @@
+{
+  "name": "aura-os",
+  "version": "1.0.0",
+  "description": "10-agent autonomous orchestration platform that resolves supply chain crises without human intervention. Built on Google Antigravity.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .js,.jsx"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.34.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "vite": "^5.2.0"
+  },
+  "keywords": [
+    "aura-os",
+    "autonomous-agents",
+    "supply-chain",
+    "orchestration",
+    "antigravity",
+    "ai-seekho",
+    "react",
+    "multi-agent"
+  ],
+  "author": {
+    "name": "Manaal Pervaiz",
+    "email": "manaalpervaiz6@gmail.com"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "homepage": "https://your-vercel-url.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/aura-os.git"
+  }
+}
