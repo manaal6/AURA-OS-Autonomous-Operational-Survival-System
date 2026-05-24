@@ -14,6 +14,18 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 //   J) Outcome numbers count-up animation
 // ═══════════════════════════════════════════════════════
 
+// ── Mobile detection hook (reactive, not one-shot) ──
+function useIsMobile() {
+  const [mobile, setMobile] = React.useState(() => window.innerWidth < 768);
+  React.useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const handler = (e) => setMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+  return mobile;
+}
+
 const jitter = (base, pct = 0.18) => base + (Math.random() - 0.5) * 2 * base * pct;
 const conf   = (base) => Math.min(0.99, Math.max(0.41, +(base + (Math.random()-0.5)*0.1).toFixed(2)));
 const fmtC   = (v) => (v * 100).toFixed(0) + "%";
@@ -555,6 +567,10 @@ function useCountUp(target, active, duration=1500) {
 // MAIN
 // ═══════════════════════════════════════════════════════
 export default function AuraOS() {
+  const isMobile = useIsMobile();
+  // Mobile panel: "agents" | "main" | "log"
+  const [mobilePanel, setMobilePanel] = useState("main");
+
   const [phase, setPhase] = useState("idle");
   const [activeAgent, setActiveAgent] = useState(null);
   const [completedAgents, setCompletedAgents] = useState([]);
@@ -748,33 +764,71 @@ export default function AuraOS() {
         .sc{animation:slideIn .4s ease}
         .cf{animation:conFlash .9s ease}
         .br{animation:boxReveal .4s ease}
+
+        /* ── MOBILE OVERRIDES (≤767px) ── */
+        @media (max-width: 767px) {
+          /* Header: stack logo row + status row */
+          .mob-header { flex-direction:column !important; align-items:flex-start !important; gap:6px !important; padding:8px 12px !important; }
+          .mob-header-left { flex-wrap:wrap; gap:6px !important; }
+          .mob-header-right { width:100%; justify-content:flex-start !important; }
+          /* Hide verbose header items on mobile */
+          .mob-hide { display:none !important; }
+          /* Ticker: smaller text, still scrollable */
+          .mob-ticker { padding:5px 10px !important; }
+          .mob-ticker-item { padding:2px 7px !important; }
+          .mob-ticker-item .tk-k { font-size:7px !important; }
+          .mob-ticker-item .tk-v { font-size:9px !important; }
+          /* Tab bar: no padding, smaller text, all fit */
+          .mob-tabs { padding:0 6px !important; overflow-x:auto; flex-wrap:nowrap !important; }
+          .tb { padding:7px 8px !important; font-size:8.5px !important; letter-spacing:0 !important; white-space:nowrap; }
+          /* Bottom nav bar for mobile panel switching */
+          .mob-bottom-nav { display:flex !important; }
+          /* Main content area full width */
+          .mob-center { height:calc(100vh - 200px) !important; }
+          /* Execution grid: single column */
+          .mob-exec-grid { grid-template-columns:1fr !important; }
+          /* Outcome grid: single column */
+          .mob-outcome-grid { grid-template-columns:1fr !important; }
+          /* Log panel height cap */
+          .mob-log-panel { height:200px !important; flex:none !important; }
+          /* Agent sidebar: compact horizontal scroll strip */
+          .mob-agent-strip { flex-direction:row !important; overflow-x:auto !important; padding:6px 8px !important; gap:5px !important; }
+          .mob-agent-strip > div { min-width:110px !important; margin-bottom:0 !important; }
+          /* Antigravity panel: hide on mobile to save space */
+          .mob-ag-panel { display:none !important; }
+          /* Confidence bar: hide on mobile */
+          .mob-conf-bar { display:none !important; }
+        }
+        @media (min-width: 768px) {
+          .mob-bottom-nav { display:none !important; }
+        }
       `}</style>
 
       {/* ── HEADER ── */}
-      <div style={{background:"#060606",borderBottom:"1px solid #0f0f0f",padding:"9px 18px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <div style={{display:"flex",alignItems:"center",gap:12}}>
+      <div className="mob-header" style={{background:"#060606",borderBottom:"1px solid #0f0f0f",padding:"9px 18px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div className="mob-header-left" style={{display:"flex",alignItems:"center",gap:12}}>
           <div style={{width:28,height:28,borderRadius:6,background:"linear-gradient(135deg,#10b981,#06b6d4)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13}}>⬡</div>
           <div>
             <div style={{fontSize:13,fontWeight:700,letterSpacing:2.5,color:"#fff"}}>AURA OS</div>
             {/* A) Orch ID in header */}
             <div style={{fontSize:7,color:"#4f8ef755",letterSpacing:.6,fontFamily:"monospace"}}>{sysState.orchId}</div>
           </div>
-          <div style={{width:1,height:24,background:"#161616"}}/>
-          <div style={{fontSize:8,color:"#4b5563"}}>CORE ORCHESTRATOR</div>
+          <div className="mob-hide" style={{width:1,height:24,background:"#161616"}}/>
+          <div className="mob-hide" style={{fontSize:8,color:"#4b5563"}}>CORE ORCHESTRATOR</div>
           <div style={{fontSize:9,color:"#4f8ef7",fontWeight:700,letterSpacing:1}}>GOOGLE ANTIGRAVITY</div>
           <span style={{fontSize:8,color:"#10b981",background:"#001a0d",border:"1px solid #10b98135",padding:"1px 5px",borderRadius:3}}>ACTIVE</span>
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:14}}>
+        <div className="mob-header-right" style={{display:"flex",alignItems:"center",gap:14}}>
           {confTick && (
             <div style={{display:"flex",alignItems:"center",gap:7,background:"#090909",border:`1px solid ${confTick.color}35`,borderRadius:5,padding:"3px 9px"}}>
               <div style={{fontSize:8,color:"#6b7280"}}>CONFIDENCE</div>
               <div style={{fontSize:14,fontWeight:700,color:confTick.color}}>{fmtC(confTick.value)}</div>
-              <div style={{fontSize:8,color:"#6b7280"}}>{confTick.label.toUpperCase()}</div>
+              <div className="mob-hide" style={{fontSize:8,color:"#6b7280"}}>{confTick.label.toUpperCase()}</div>
             </div>
           )}
-          {phase==="running" && <div style={{display:"flex",alignItems:"center",gap:6,fontSize:9,color:"#f59e0b"}}><div style={{width:5,height:5,borderRadius:"50%",background:"#f59e0b",animation:"pulse .9s infinite"}}/> CRISIS RESOLUTION ACTIVE</div>}
-          {phase==="done"    && <div style={{display:"flex",alignItems:"center",gap:6,fontSize:9,color:"#10b981"}}><div style={{width:5,height:5,borderRadius:"50%",background:"#10b981"}}/> SYSTEM STABILIZED · HB {fmtHB(heartbeatSec)}</div>}
-          {phase==="idle"    && <div style={{fontSize:9,color:"#4b5563"}}>STANDBY — AWAITING TRIGGER</div>}
+          {phase==="running" && <div style={{display:"flex",alignItems:"center",gap:6,fontSize:9,color:"#f59e0b"}}><div style={{width:5,height:5,borderRadius:"50%",background:"#f59e0b",animation:"pulse .9s infinite"}}/> <span className="mob-hide">CRISIS RESOLUTION ACTIVE</span><span style={{display:"none"}} className="mob-show">ACTIVE</span></div>}
+          {phase==="done"    && <div style={{display:"flex",alignItems:"center",gap:6,fontSize:9,color:"#10b981"}}><div style={{width:5,height:5,borderRadius:"50%",background:"#10b981"}}/> <span>STABILIZED</span></div>}
+          {phase==="idle"    && <div className="mob-hide" style={{fontSize:9,color:"#4b5563"}}>STANDBY — AWAITING TRIGGER</div>}
         </div>
       </div>
 
@@ -782,18 +836,22 @@ export default function AuraOS() {
       <StateTicker state={sysState}/>
 
       <div style={{
-    display: "grid",
-    gridTemplateColumns:
-      window.innerWidth < 768
-        ? "1fr"
-        : "210px 1fr 270px",
-    height: "calc(100vh - 94px)",
-    overflow: "hidden",
-  }}
->
+        display: "grid",
+        gridTemplateColumns: isMobile ? "1fr" : "210px 1fr 270px",
+        height: isMobile ? "calc(100vh - 148px)" : "calc(100vh - 94px)",
+        overflow: "hidden",
+        marginBottom: isMobile ? 54 : 0,
+      }}>
 
-        {/* ── LEFT ── */}
-        <div style={{background:"#070707",borderRight:"1px solid #0f0f0f",padding:11,overflowY:"auto",display:"flex",flexDirection:"column"}}>
+        {/* ── LEFT (agents sidebar) ── hidden on mobile unless mobilePanel==="agents" */}
+        <div style={{
+          background:"#070707",
+          borderRight:"1px solid #0f0f0f",
+          padding:11,
+          overflowY:"auto",
+          display: isMobile && mobilePanel !== "agents" ? "none" : "flex",
+          flexDirection:"column",
+        }}>
           <div style={{fontSize:8,color:"#4b5563",letterSpacing:1,marginBottom:9}}>ANTIGRAVITY AGENT PIPELINE</div>
           {AGENTS.map((a,i)=><AgentRow key={a.id} agent={a} active={activeAgent} completed={completedAgents} idx={i}/>)}
 
@@ -808,10 +866,10 @@ export default function AuraOS() {
           </div>
 
           {/* C) Antigravity call panel */}
-          <AntigravityCallPanel step={liveStep} orchId={sysState.orchId}/>
+          <div className="mob-ag-panel"><AntigravityCallPanel step={liveStep} orchId={sysState.orchId}/></div>
 
           {/* G) Confidence propagation */}
-          <ConfidencePropBar allSteps={allSteps}/>
+          <div className="mob-conf-bar"><ConfidencePropBar allSteps={allSteps}/></div>
 
           <div style={{marginTop:13}}>
             {phase==="idle" && <button className="rbtn" onClick={run}>▶  RUN SCENARIO</button>}
@@ -827,7 +885,11 @@ export default function AuraOS() {
         </div>
 
         {/* ── CENTER ── */}
-        <div style={{display:"flex",flexDirection:"column",overflow:"hidden"}}>
+        <div style={{
+          display: isMobile && mobilePanel !== "main" ? "none" : "flex",
+          flexDirection:"column",
+          overflow:"hidden",
+        }}>
 
           {/* Crisis feed */}
           <div style={{background:"#060606",borderBottom:"1px solid #0f0f0f",padding:"7px 15px"}}>
@@ -843,7 +905,7 @@ export default function AuraOS() {
           </div>
 
           {/* Tabs */}
-          <div style={{background:"#070707",borderBottom:"1px solid #0f0f0f",padding:"0 15px",display:"flex",gap:2}}>
+          <div className="mob-tabs" style={{background:"#070707",borderBottom:"1px solid #0f0f0f",padding:"0 15px",display:"flex",gap:2}}>
             {[{id:"reasoning",l:"REASONING TIMELINE"},{id:"contradiction",l:"⚡ CONTRADICTION"},{id:"execution",l:"⚙ EXECUTION"},{id:"outcome",l:"📈 OUTCOME"}].map(t=>(
               <button key={t.id} className={`tb ${tab===t.id?"on":""}`} onClick={()=>setTab(t.id)}>{t.l}</button>
             ))}
@@ -996,7 +1058,7 @@ export default function AuraOS() {
                 </div>
 
                 {/* D) Sequential box reveal */}
-                <div style={{padding:"10px 14px",borderTop:"1px solid #0f0f0f",display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                <div className="mob-exec-grid" style={{padding:"10px 14px",borderTop:"1px solid #0f0f0f",display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
                   {execBoxes.map((item,i)=>(
                     <div key={i} className={item.show ? "br" : ""} style={{
                       background:"#090909",
@@ -1023,7 +1085,7 @@ export default function AuraOS() {
                 <div style={{fontSize:9,color:"#10b981",fontWeight:700,marginBottom:12,letterSpacing:1}}>📈 OUTCOME — ANTIGRAVITY SYSTEM STATE DELTA</div>
                 {!outcomeData && <div style={{fontSize:10,color:"#4b5563",marginTop:50,textAlign:"center"}}>Outcome pending crisis resolution...</div>}
                 {outcomeData && (<>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+                  <div className="mob-outcome-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
                     {[
                       {label:"Stockout Risk",    before:`${outcomeData.sBefore}%`, after:`${outcomeData.sAfter}%`},
                       {label:"Revenue at Risk",  before:`$${(outcomeData.rBefore||218400).toLocaleString()}`, after:"$0"},
@@ -1083,7 +1145,12 @@ export default function AuraOS() {
         </div>
 
         {/* ── RIGHT: LOG ── */}
-        <div style={{background:"#040404",borderLeft:"1px solid #0f0f0f",display:"flex",flexDirection:"column"}}>
+        <div style={{
+          background:"#040404",
+          borderLeft:"1px solid #0f0f0f",
+          display: isMobile && mobilePanel !== "log" ? "none" : "flex",
+          flexDirection:"column",
+        }}>
           <div style={{padding:"8px 13px",borderBottom:"1px solid #0c0c0c",display:"flex",alignItems:"center",gap:6}}>
             <div style={{width:5,height:5,borderRadius:"50%",background:phase==="running"?"#10b981":"#1a1a1a",animation:phase==="running"?"pulse .8s infinite":"none"}}/>
             <span style={{fontSize:8,color:"#4b5563",letterSpacing:1}}>ANTIGRAVITY SYSTEM LOG</span>
@@ -1120,6 +1187,32 @@ export default function AuraOS() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* ── MOBILE BOTTOM NAV ── */}
+      <div className="mob-bottom-nav" style={{
+        position:"fixed", bottom:0, left:0, right:0,
+        background:"#060606", borderTop:"1px solid #161616",
+        display:"flex", zIndex:100,
+      }}>
+        {[
+          {id:"agents", icon:"🤖", label:"AGENTS"},
+          {id:"main",   icon:"⬡",  label:"MISSION"},
+          {id:"log",    icon:"📋", label:"LOG"},
+        ].map(btn=>(
+          <button key={btn.id} onClick={()=>setMobilePanel(btn.id)} style={{
+            flex:1, background:"none", border:"none", cursor:"pointer",
+            padding:"10px 4px 8px",
+            borderTop:`2px solid ${mobilePanel===btn.id?"#10b981":"transparent"}`,
+            display:"flex", flexDirection:"column", alignItems:"center", gap:3,
+          }}>
+            <span style={{fontSize:16}}>{btn.icon}</span>
+            <span style={{
+              fontSize:8, fontFamily:"monospace", fontWeight:700, letterSpacing:.5,
+              color: mobilePanel===btn.id ? "#10b981" : "#4b5563",
+            }}>{btn.label}</span>
+          </button>
+        ))}
       </div>
     </div>
   );
